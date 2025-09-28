@@ -2,26 +2,43 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Buildozer dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-pip \
+          openjdk-11-jdk \
+          zip \
+          unzip
+
+    - name: Install Buildozer
+      run: pip install buildozer
 
     - name: Build APK with Buildozer
-      uses: artem-solovev/buildozer-action@v1
-      id: buildozer
-      with:
-        workdir: .
-        buildozer_version: stable
+      run: |
+        buildozer init
+        buildozer android debug
 
     - name: Upload APK artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: VahotApp-APK
         path: bin/*.apk
+        retention-days: 7
