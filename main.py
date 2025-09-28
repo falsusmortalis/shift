@@ -4,8 +4,12 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.popup import Popup
 from datetime import datetime, timedelta
 from collections import defaultdict
+import csv
+import os
 
 class Employee:
     def __init__(self, id, name):
@@ -96,6 +100,38 @@ class ShiftScheduler:
             
         return available
 
+class FileChooserPopup(Popup):
+    def __init__(self, callback, **kwargs):
+        super().__init__(**kwargs)
+        self.callback = callback
+        self.title = "Выберите CSV файл"
+        self.size_hint = (0.9, 0.9)
+        
+        layout = BoxLayout(orientation='vertical')
+        file_chooser = FileChooserListView()
+        buttons_layout = BoxLayout(size_hint_y=0.1)
+        
+        select_btn = Button(text='Выбрать')
+        cancel_btn = Button(text='Отмена')
+        
+        def on_select(instance):
+            if file_chooser.selection:
+                self.callback(file_chooser.selection[0])
+            self.dismiss()
+        
+        def on_cancel(instance):
+            self.dismiss()
+        
+        select_btn.bind(on_press=on_select)
+        cancel_btn.bind(on_press=on_cancel)
+        
+        buttons_layout.add_widget(select_btn)
+        buttons_layout.add_widget(cancel_btn)
+        
+        layout.add_widget(file_chooser)
+        layout.add_widget(buttons_layout)
+        self.content = layout
+
 class VahotApp(App):
     def build(self):
         self.scheduler = ShiftScheduler()
@@ -105,36 +141,106 @@ class VahotApp(App):
         layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
         
         # Заголовок
-        title = Label(text='Распределение нарядов', size_hint_y=0.1, font_size='20sp')
+        title = Label(text='Распределение нарядов', size_hint_y=0.08, font_size='20sp')
         layout.add_widget(title)
         
+        # Кнопки загрузки файлов
+        file_buttons = BoxLayout(orientation='horizontal', size_hint_y=0.08, spacing=10)
+        
+        load_employees_btn = Button(text='Загрузить сотрудников из CSV')
+        load_schedule_btn = Button(text='Загрузить расписание из CSV')
+        
+        load_employees_btn.bind(on_press=self.show_file_chooser_employees)
+        load_schedule_btn.bind(on_press=self.show_file_chooser_schedule)
+        
+        file_buttons.add_widget(load_employees_btn)
+        file_buttons.add_widget(load_schedule_btn)
+        layout.add_widget(file_buttons)
+        
         # Область для ввода сотрудников
+        employees_label = Label(text='Сотрудники и отпуска:', size_hint_y=0.05)
+        layout.add_widget(employees_label)
+        
         self.employees_input = TextInput(
-            hint_text='Введите сотрудников:\nИванов:01.01.2024,02.01.2024\nПетров:\nСидоров:15.01.2024',
-            size_hint_y=0.3
+            text='Иванов:01.01.2024,02.01.2024\nПетров:\nСидоров:15.01.2024',
+            size_hint_y=0.25
         )
         layout.add_widget(self.employees_input)
         
         # Область для ввода расписания
+        schedule_label = Label(text='Расписание нарядов:', size_hint_y=0.05)
+        layout.add_widget(schedule_label)
+        
         self.schedule_input = TextInput(
-            hint_text='Введите расписание:\n01.01.2024;1,2,3\n02.01.2024;4,5\n03.01.2024;6,7',
-            size_hint_y=0.3
+            text='01.01.2024;1,2,3\n02.01.2024;4,5\n03.01.2024;6,7',
+            size_hint_y=0.25
         )
         layout.add_widget(self.schedule_input)
         
         # Кнопка расчета
-        calc_btn = Button(text='Рассчитать расписание', size_hint_y=0.1)
+        calc_btn = Button(text='Рассчитать расписание', size_hint_y=0.08)
         calc_btn.bind(on_press=self.calculate_schedule)
         layout.add_widget(calc_btn)
         
         # Область результатов
-        scroll = ScrollView(size_hint_y=0.2)
-        self.results_label = Label(text='Результаты появятся здесь', size_hint_y=None, text_size=(None, None))
+        scroll = ScrollView(size_hint_y=0.16)
+        self.results_label = Label(
+            text='Результаты появятся здесь...\n\nПример формата CSV:\nСотрудники: имя:дата,дата\nРасписание: дата;тип1,тип2',
+            size_hint_y=None, 
+            text_size=(None, None)
+        )
         self.results_label.bind(texture_size=self.results_label.setter('size'))
         scroll.add_widget(self.results_label)
         layout.add_widget(scroll)
         
         return layout
+    
+    def show_file_chooser_employees(self, instance):
+        popup = FileChooserPopup(self.load_employees_from_csv)
+        popup.open()
+    
+    def show_file_chooser_schedule(self, instance):
+        popup = FileChooserPopup(self.load_schedule_from_csv)
+        popup.open()
+    
+    def load_employees_from_csv(self, file_path):
+        try:
+            employees_text = ""
+            with open(file_path, 'r', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    if len(row) >= 2:
+                        name = row[0].strip()
+                        dates_str = ",".join([date.strip() for date in row[1:] if date.strip()])
+                        employees_text += f"{name}:{dates_str}\n"
+                    elif len(row) == 1 and row[0].strip():
+                        employees_text += f"{row[0].strip()}:\n"
+            
+            self.employees_input.text = employees_text.strip()
+            self.results_label.text = f"✅ Сотрудники загружены из файла\n{os.path.basename(file_path)}"
+            
+        except Exception as e:
+            self.results_label.text = f"❌ Ошибка загрузки сотрудников: {str(e)}"
+    
+    def load_schedule_from_csv(self, file_path):
+        try:
+            schedule_text = ""
+            with open(file_path, 'r', encoding='utf-8') as file:
+                reader = csv.reader(file, delimiter=';')
+                for row in reader:
+                    if len(row) >= 2:
+                        date_str = row[0].strip()
+                        shifts_str = ",".join([shift.strip() for shift in row[1].split(',') if shift.strip()])
+                        schedule_text += f"{date_str};{shifts_str}\n"
+                    elif len(row) == 1 and row[0].strip():
+                        # Если есть только дата без нарядов
+                        schedule_text += f"{row[0].strip()};\n"
+            
+            self.schedule_input.text = schedule_text.strip()
+            self.results_label.text = f"✅ Расписание загружено из файла\n{os.path.basename(file_path)}"
+            
+        except Exception as e:
+            self.results_label.text = f"❌ Ошибка загрузки расписания: {str(e)}"
     
     def calculate_schedule(self, instance):
         try:
@@ -171,9 +277,10 @@ class VahotApp(App):
                             date = datetime.strptime(date_str, "%d.%m.%Y")
                             shift_types = []
                             for shift_str in shifts_str.split(','):
-                                shift_type = int(shift_str.strip())
-                                if 1 <= shift_type <= 7:
-                                    shift_types.append(shift_type)
+                                if shift_str.strip():
+                                    shift_type = int(shift_str.strip())
+                                    if 1 <= shift_type <= 7:
+                                        shift_types.append(shift_type)
                             self.daily_shifts[date] = shift_types
                         except ValueError:
                             pass
