@@ -1,13 +1,10 @@
 name: Build Android APK
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:  # Добавляем ручной запуск
+on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Меняем на latest
+    runs-on: ubuntu-22.04  # Используйте ubuntu-22.04 вместо latest
     
     steps:
     - name: Checkout code
@@ -16,41 +13,29 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.9'  # Используйте Python 3.9 вместо 3.8
 
     - name: Install system dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          python3-pip \
-          openjdk-8-jdk \
-          zip \
-          unzip \
-          git \
-          autoconf \
-          automake \
-          libtool \
-          pkg-config \
-          zlib1g-dev \
-          libncurses5-dev \
-          libncursesw5-dev \
-          cmake \
-          libffi-dev \
-          libssl-dev
+        sudo apt update
+        sudo apt install -y git zip unzip openjdk-11-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+
+    - name: Accept Android SDK licenses
+      run: |
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
 
     - name: Install Buildozer
       run: |
-        pip install --upgrade pip
-        pip install buildozer cython virtualenv
+        pip3 install --upgrade buildozer cython virtualenv
 
-    - name: Build APK with Buildozer
+    - name: Build with Buildozer
       run: |
         buildozer -v android debug
-      timeout-minutes: 60
-
-    - name: Upload APK artifact
+      
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: VahotApp-APK
+        name: vahot-app
         path: bin/*.apk
-        retention-days: 30
