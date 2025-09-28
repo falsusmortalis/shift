@@ -6,22 +6,50 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-20.04  # Используем Ubuntu 20.04 для совместимости
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build using Kivy Docker image
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - name: Install system dependencies
       run: |
-        docker run --rm \
-          -v "$(pwd)":/src \
-          -w /src \
-          kivy/kivy:latest \
-          /bin/bash -c "
-          pip install buildozer &&
-          buildozer -v android debug
-          "
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-pip \
+          openjdk-8-jdk \
+          zip \
+          unzip \
+          git \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libtinfo5 \
+          cmake \
+          libffi-dev \
+          libssl-dev \
+          libltdl-dev \
+          libsqlite3-dev \
+          libusb-1.0-0-dev
+
+    - name: Install Buildozer and dependencies
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython virtualenv
+
+    - name: Build APK with Buildozer
+      run: |
+        buildozer -v android debug
+      timeout-minutes: 60
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
