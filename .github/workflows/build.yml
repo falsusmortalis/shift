@@ -13,17 +13,26 @@ jobs:
     - name: Set up Python 3.8
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'  # ВАЖНО: используем 3.8 вместо 3.9
+        python-version: '3.8'
 
     - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-8-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+        sudo apt install -y git zip unzip openjdk-8-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev curl
 
     - name: Install Buildozer and dependencies
       run: |
         pip3 install --upgrade pip
         pip3 install buildozer cython==0.29.33 virtualenv
+
+    - name: Pre-download Android NDK
+      run: |
+        mkdir -p ~/.buildozer/android/platform
+        cd ~/.buildozer/android/platform
+        # Скачайте NDK напрямую
+        curl -L -o android-ndk-r25b.zip https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip -q android-ndk-r25b.zip
+        rm android-ndk-r25b.zip
 
     - name: Build with Buildozer
       run: |
