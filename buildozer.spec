@@ -7,7 +7,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 
 version = 1.0
-requirements = python3,kivy
+requirements = python3,kivy==2.3.0,cython<3.0
 
 orientation = portrait
 
@@ -18,15 +18,11 @@ android.permissions = WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 android.api = 34
 android.minapi = 21
+android.ndk = 23.1.7779620
 
-# ДОБАВЬТЕ ЭТИ СТРОКИ ДЛЯ РЕШЕНИЯ ПРОБЛЕМЫ С ЛИЦЕНЗИЯМИ
 android.accept_sdk_license = True
 android.sdk_manager_licenses = android-sdk-license, android-sdk-preview-license
-
-# Используйте более новую версию build-tools
-android.build_tools = 34.0.0
-
-# Дополнительные рекомендуемые настройки
+android.build_tools = 30.0.3
 android.allow_backup = True
 android.enable_androidx = True
 
