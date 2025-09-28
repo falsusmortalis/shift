@@ -54,9 +54,3 @@ jobs:
         name: VahotApp-APK
         path: bin/*.apk
         retention-days: 30
-
-      - name: Accept Android SDK licenses
-  run: |
-    mkdir -p ~/.android
-    touch ~/.android/repositories.cfg
-    yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses || true
