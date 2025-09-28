@@ -15,6 +15,16 @@ jobs:
       with:
         python-version: '3.8'
 
+    - name: Cache Buildozer dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.buildozer
+          ~/.gradle
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-buildozer-
+
     - name: Install system dependencies
       run: |
         sudo apt update
@@ -24,8 +34,23 @@ jobs:
       run: |
         pip3 install --upgrade buildozer cython==0.29.33 virtualenv
 
+    - name: Pre-download Android NDK
+      run: |
+        mkdir -p ~/.buildozer/android/platform
+        cd ~/.buildozer/android/platform
+        
+        # Скачаем NDK напрямую с резервными источниками
+        if [ ! -d "android-ndk-r25b" ]; then
+          echo "Downloading NDK..."
+          wget -q --show-progress -O android-ndk-r25b.zip https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+          unzip -q android-ndk-r25b.zip
+          rm android-ndk-r25b.zip
+        fi
+
     - name: Build with Buildozer
       run: |
+        # Увеличим таймауты для загрузки
+        export BUILDODER_DOWNLOAD_TIMEOUT=300
         buildozer -v android debug
       
     - name: Upload APK
