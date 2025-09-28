@@ -16,8 +16,19 @@ icon.filename = %(source.dir)s/icon.png
 
 android.permissions = WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
-android.api = 30
+android.api = 34
 android.minapi = 21
+
+# ДОБАВЬТЕ ЭТИ СТРОКИ ДЛЯ РЕШЕНИЯ ПРОБЛЕМЫ С ЛИЦЕНЗИЯМИ
+android.accept_sdk_license = True
+android.sdk_manager_licenses = android-sdk-license, android-sdk-preview-license
+
+# Используйте более новую версию build-tools
+android.build_tools = 34.0.0
+
+# Дополнительные рекомендуемые настройки
+android.allow_backup = True
+android.enable_androidx = True
 
 [buildozer]
 log_level = 2
