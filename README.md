@@ -1,2 +1,2 @@
 расписание в csv
-fix 1
+Fix build workflow - direct buildozer
