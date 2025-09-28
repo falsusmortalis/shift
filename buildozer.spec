@@ -18,7 +18,9 @@ android.permissions = WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 android.api = 30
 android.minapi = 21
-android.ndk = 25b  # Изменено на рекомендованную версию
+
+# Используйте версию 25b без комментариев в значении
+android.ndk = 25b
 
 android.accept_sdk_license = True
 android.sdk_manager_licenses = android-sdk-license, android-sdk-preview-license
