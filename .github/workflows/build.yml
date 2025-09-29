@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Android APK
 
 on: [push, pull_request]
 
@@ -14,9 +14,11 @@ jobs:
       with:
         buildozer-version: stable
         target: android debug
+        workdir: ./
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: app
+        name: vahot-app
         path: bin/*.apk
+        retention-days: 5
