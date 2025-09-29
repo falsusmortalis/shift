@@ -1,4 +1,4 @@
-name: Build Android APK with Custom Docker
+name: Build Android APK
 
 on: [push, pull_request]
 
@@ -7,23 +7,29 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Build Docker image
-      run: |
-        docker build \
-          --build-arg USER_ID=$(id -u) \
-          --build-arg GROUP_ID=$(id -g) \
-          -t my-buildozer .
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
 
-    - name: Build APK with Docker
+    - name: Install system dependencies
       run: |
-        docker run --rm \
-          -v $(pwd):/app \
-          -w /app \
-          my-buildozer \
-          buildozer -v android debug
+        sudo apt update
+        sudo apt install -y \
+          git zip unzip openjdk-8-jdk python3-pip \
+          autoconf libtool pkg-config zlib1g-dev \
+          libncurses5-dev libncursesw5-dev libtinfo5 \
+          cmake libffi-dev libssl-dev
+
+    - name: Install Buildozer with specific versions
+      run: |
+        pip3 install buildozer==1.4.0 cython==0.29.33
+
+    - name: Build APK
+      run: |
+        buildozer -v android debug
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
