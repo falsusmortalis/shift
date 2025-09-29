@@ -25,14 +25,19 @@ RUN apt-get update && apt-get install -y \
     sudo \
     && rm -rf /var/lib/apt/lists/*
 
+# Создайте пользователя с таким же UID как на хосте
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+RUN groupadd -g $GROUP_ID builder && \
+    useradd -m -u $USER_ID -g $GROUP_ID builder && \
+    mkdir -p /app && \
+    chown -R builder:builder /app
+
 # Установите Buildozer
 RUN pip3 install --upgrade buildozer cython virtualenv
 
-# Создайте не-root пользователя
-RUN useradd -m -u 1000 builder && \
-    echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-# Переключитесь на не-root пользователя
+# Переключитесь на пользователя
 USER builder
 WORKDIR /app
 
