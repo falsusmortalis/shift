@@ -5,11 +5,21 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30  # Увеличиваем таймаут
+    timeout-minutes: 30
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Cache Android SDK/NDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.buildozer
+          ~/.gradle
+        key: ${{ runner.os }}-android-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-android-
 
     - name: Set up Python 3.8
       uses: actions/setup-python@v4
@@ -24,18 +34,15 @@ jobs:
     - name: Install Buildozer
       run: pip3 install buildozer
 
-    - name: Pre-download Android NDK 21e
+    - name: Build with retry and timeout
       run: |
-        mkdir -p ~/.buildozer/android/platform
-        cd ~/.buildozer/android/platform
-        wget -q https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
-        unzip -q android-ndk-r21e-linux-x86_64.zip
-        rm android-ndk-r21e-linux-x86_64.zip
-        echo "NDK downloaded successfully"
-
-    - name: Build APK
-      run: |
-        buildozer -v android debug
+        export BUILDODER_DOWNLOAD_TIMEOUT=300
+        for i in 1 2 3; do
+          echo "Build attempt $i"
+          timeout 20m buildozer -v android debug && break
+          echo "Build failed or timed out, retrying..."
+          sleep 10
+        done
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
