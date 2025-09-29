@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK with Docker
 
 on: [push, pull_request]
 
@@ -10,48 +10,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-
-    - name: Cache Buildozer dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.buildozer
-          ~/.gradle
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
-
-    - name: Install system dependencies
+    - name: Build using Docker
       run: |
-        sudo apt update
-        sudo apt install -y git zip unzip openjdk-8-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-
-    - name: Install Buildozer
-      run: |
-        pip3 install --upgrade buildozer cython==0.29.33 virtualenv
-
-    - name: Pre-download Android NDK
-      run: |
-        mkdir -p ~/.buildozer/android/platform
-        cd ~/.buildozer/android/platform
-        
-        # Скачаем NDK напрямую с резервными источниками
-        if [ ! -d "android-ndk-r25b" ]; then
-          echo "Downloading NDK..."
-          wget -q --show-progress -O android-ndk-r25b.zip https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-          unzip -q android-ndk-r25b.zip
-          rm android-ndk-r25b.zip
-        fi
-
-    - name: Build with Buildozer
-      run: |
-        # Увеличим таймауты для загрузки
-        export BUILDODER_DOWNLOAD_TIMEOUT=300
-        buildozer -v android debug
+        docker run --rm \
+          -v $(pwd):/app \
+          -w /app \
+          kivy/buildozer:latest \
+          buildozer -v android debug
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
