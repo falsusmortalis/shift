@@ -1,4 +1,11 @@
-name: Build Android APK with Docker
+ - name: Build using custom Docker
+      run: |
+        docker build -t my-buildozer .
+        docker run --rm \
+          -v $(pwd):/app \
+          -w /app \
+          my-buildozer \
+          buildozer -v android debug
 
 on: [push, pull_request]
 
