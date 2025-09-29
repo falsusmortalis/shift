@@ -10,16 +10,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build using official Kivy Docker
-      run: |
-        docker run --rm \
-          -v $(pwd):/app \
-          -w /app \
-          -e BUILDOZER_ALLOW_ROOT=1 \
-          kivyorg/buildozer:latest \
-          buildozer -v android debug
-
-    - name: Build using official Kivy Docker
+    - name: Build using Docker with yes flag
       run: |
         docker run --rm \
           -v $(pwd):/app \
