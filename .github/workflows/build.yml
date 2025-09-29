@@ -1,4 +1,4 @@
-name: Build Android APK with Docker
+name: Build Android APK with Custom Docker
 
 on: [push, pull_request]
 
@@ -10,18 +10,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Fix permissions and build
+    - name: Build Docker image
       run: |
-        # Даем права на запись текущему пользователю
-        chmod -R a+rwx .
-        
+        docker build \
+          --build-arg USER_ID=$(id -u) \
+          --build-arg GROUP_ID=$(id -g) \
+          -t my-buildozer .
+
+    - name: Build APK with Docker
+      run: |
         docker run --rm \
           -v $(pwd):/app \
           -w /app \
-          -e BUILDOZER_ALLOW_ROOT=1 \
-          -u $(id -u):$(id -g) \
-          kivyorg/buildozer:latest \
-          buildozer --yes -v android debug
+          my-buildozer \
+          buildozer -v android debug
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
