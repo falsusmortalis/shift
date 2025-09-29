@@ -7,7 +7,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 
 version = 1.0
-requirements = python3==3.8.5,kivy==2.1.0
+requirements = python3,kivy
 
 orientation = portrait
 
@@ -18,10 +18,8 @@ android.permissions = WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 android.api = 30
 android.minapi = 21
-android.ndk = 23.1.7779620
 
 android.accept_sdk_license = True
-android.build_tools = 30.0.3
 
 [buildozer]
 log_level = 2
