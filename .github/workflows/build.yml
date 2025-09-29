@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 30  # Увеличиваем таймаут
 
     steps:
     - name: Checkout code
@@ -15,43 +16,24 @@ jobs:
       with:
         python-version: '3.8'
 
-    - name: Cache Buildozer dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.buildozer
-          ~/.gradle
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
-
-    - name: Install system dependencies
+    - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y \
-          git zip unzip openjdk-8-jdk python3-pip \
-          autoconf libtool pkg-config zlib1g-dev \
-          libncurses5-dev libncursesw5-dev libtinfo5 \
-          cmake libffi-dev libssl-dev
+        sudo apt install -y python3-pip openjdk-8-jdk git zip unzip wget
 
-    - name: Install Buildozer and Cython
-      run: |
-        python -m pip install --upgrade pip
-        pip install buildozer cython==0.29.33 virtualenv
+    - name: Install Buildozer
+      run: pip3 install buildozer
 
-    - name: Pre-download Android NDK
+    - name: Pre-download Android NDK 21e
       run: |
         mkdir -p ~/.buildozer/android/platform
         cd ~/.buildozer/android/platform
-        # Скачиваем NDK версии 25b, если его нет
-        if [ ! -d "android-ndk-r25b" ]; then
-          echo "Downloading Android NDK r25b..."
-          wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-          unzip -q android-ndk-r25b-linux.zip
-          rm android-ndk-r25b-linux.zip
-        fi
+        wget -q https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
+        unzip -q android-ndk-r21e-linux-x86_64.zip
+        rm android-ndk-r21e-linux-x86_64.zip
+        echo "NDK downloaded successfully"
 
-    - name: Build APK with Buildozer
+    - name: Build APK
       run: |
         buildozer -v android debug
 
@@ -60,4 +42,3 @@ jobs:
       with:
         name: vahot-app
         path: bin/*.apk
-        retention-days: 5
