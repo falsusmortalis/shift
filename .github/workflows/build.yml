@@ -1,4 +1,4 @@
-name: Build Android APK with Docker
+name: Build Android APK with Custom Docker
 
 on: [push, pull_request]
 
@@ -10,12 +10,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build using official Kivy Docker
+    - name: Build Docker image
+      run: |
+        docker build -t my-buildozer .
+
+    - name: Build APK with Docker
       run: |
         docker run --rm \
           -v $(pwd):/app \
           -w /app \
-          kivyorg/buildozer:latest \
+          my-buildozer \
           buildozer -v android debug
       
     - name: Upload APK
