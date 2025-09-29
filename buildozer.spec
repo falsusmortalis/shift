@@ -18,8 +18,11 @@ android.permissions = WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 android.api = 30
 android.minapi = 21
+# Используем NDK 21e - стабильная и меньшая версия
+android.ndk = 21e
 
 android.accept_sdk_license = True
+android.build_tools = 30.0.3
 
 [buildozer]
 log_level = 2
