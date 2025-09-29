@@ -1,29 +1,22 @@
-name: Build Android APK with Non-Root Docker
+name: Build APK
 
 on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Build Docker image
-      run: |
-        docker build -t my-buildozer .
-
-    - name: Build APK with Docker
-      run: |
-        docker run --rm \
-          -v $(pwd):/app \
-          -w /app \
-          my-buildozer \
-          buildozer -v android debug
-      
+    - name: Build with Buildozer Action
+      uses: artem-solovev/buildozer-action@v1
+      with:
+        buildozer-version: stable
+        target: android debug
+        
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: vahot-app
+        name: app
         path: bin/*.apk
