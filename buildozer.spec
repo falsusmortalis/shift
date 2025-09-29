@@ -1,28 +1,20 @@
-[app]
-title = Vahot App
-package.name = vahotapp
-package.domain = org.vahot
+FROM python:3.8-bullseye
 
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
+# Установите зависимости
+RUN apt-get update && apt-get install -y \
+    git zip unzip openjdk-8-jdk \
+    autoconf libtool pkg-config zlib1g-dev \
+    libncurses5-dev libncursesw5-dev libtinfo5 \
+    cmake libffi-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-version = 1.0
-# Ключевое изменение: используем python3 с версией 3.8
-requirements = python3==3.8.5,kivy==2.1.0
+# Установите Buildozer
+RUN pip install buildozer==1.4.0 cython==0.29.33
 
-orientation = portrait
+WORKDIR /app
 
-presplash.filename = %(source.dir)s/presplash.png
-icon.filename = %(source.dir)s/icon.png
+# Создайте не-root пользователя
+RUN useradd -m -u 1000 builder && chown -R builder:builder /app
+USER builder
 
-android.permissions = WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-
-android.api = 30
-android.minapi = 21
-android.ndk = 23.1.7779620
-
-android.accept_sdk_license = True
-android.build_tools = 30.0.3
-
-[buildozer]
-log_level = 2
+CMD ["buildozer", "--version"]
