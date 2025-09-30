@@ -1,74 +1,64 @@
-
 name: Build Android APK
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Cache Android SDK/NDK
+    - name: Cache Buildozer and Gradle
       uses: actions/cache@v4
       with:
         path: |
-         ~/.android
-          /usr/local/lib/android
-        key: android-sdk-${{ runner.os }}
+          ~/.buildozer
+          ~/.gradle
+        key: ${{ runner.os }}-android-${{ hashFiles('buildozer.spec') }}
         restore-keys: |
           ${{ runner.os }}-android-
 
-    - name: Set up Python 3.8
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.8'
 
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
         sudo apt update
         sudo apt install -y python3-pip openjdk-8-jdk git zip unzip wget
+
+    - name: Install Buildozer and Cython
+      run: |
         pip3 install buildozer cython
 
-    - name: Install Buildozer
-      run: pip3 install buildozer
-
-    - name: Build with retry and timeout
+    - name: Build APK with retries
       run: |
-        export BUILDODER_DOWNLOAD_TIMEOUT=300
+        export BUILDODER_DOWNLOAD_TIMEOUT=600
         for i in 1 2 3; do
-        echo "Build attempt $i"
-        timeout 40m buildozer -v android debug && break
-        echo "Build failed or timed out, retrying..."
-        sleep 10
+          echo "Build attempt $i"
+          timeout 45m buildozer -v android debug && break
+          echo "Build failed or timed out, retrying..."
+          sleep 30
         done
 
-        name: Build APK
-        run: |
-        buildozer -v android debug
-
-        name: Find and list APK files
-        run: |
+    - name: Find and list APK files
+      run: |
         echo "=== Searching for APK files ==="
         find . -name "*.apk" -type f
         echo "=== Contents of current directory ==="
         ls -la
         echo "=== Contents of .buildozer ==="
         ls -la .buildozer/android/platform/*/build/outputs/apk/ 2>/dev/null || echo "APK directory not found"
-        
-    - name: Debug - Check build results
-      run: |
-        echo "=== Checking build directory ==="
-        find . -name "*.apk" -type f | head -10
-        echo "=== Checking bin directory ==="
-        ls -la bin/ || echo "bin directory not found"
-        echo "=== Checking .buildozer directory ==="
-        find .buildozer -name "*.apk" -type f 2>/dev/null | head -10
-    - name: Upload APK
+
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: vahot-app
+        name: android-apk
         path: bin/*.apk
