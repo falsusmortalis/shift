@@ -43,7 +43,15 @@ jobs:
           echo "Build failed or timed out, retrying..."
           sleep 10
         done
-
+        
+    - name: Debug - Check build results
+      run: |
+        echo "=== Checking build directory ==="
+        find . -name "*.apk" -type f | head -10
+        echo "=== Checking bin directory ==="
+        ls -la bin/ || echo "bin directory not found"
+        echo "=== Checking .buildozer directory ==="
+        find .buildozer -name "*.apk" -type f 2>/dev/null | head -10
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
