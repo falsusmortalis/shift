@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on: [push, pull_request]
@@ -15,9 +16,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.buildozer
-          ~/.gradle
-        key: ${{ runner.os }}-android-${{ hashFiles('buildozer.spec') }}
+         ~/.android
+          /usr/local/lib/android
+        key: android-sdk-${{ runner.os }}
         restore-keys: |
           ${{ runner.os }}-android-
 
@@ -39,10 +40,10 @@ jobs:
       run: |
         export BUILDODER_DOWNLOAD_TIMEOUT=300
         for i in 1 2 3; do
-          echo "Build attempt $i"
-          timeout 20m buildozer -v android debug && break
-          echo "Build failed or timed out, retrying..."
-          sleep 10
+        echo "Build attempt $i"
+        timeout 40m buildozer -v android debug && break
+        echo "Build failed or timed out, retrying..."
+        sleep 10
         done
 
         name: Build APK
