@@ -30,6 +30,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y python3-pip openjdk-8-jdk git zip unzip wget
+        pip3 install buildozer cython
 
     - name: Install Buildozer
       run: pip3 install buildozer
@@ -43,6 +44,19 @@ jobs:
           echo "Build failed or timed out, retrying..."
           sleep 10
         done
+
+        name: Build APK
+        run: |
+        buildozer -v android debug
+
+        name: Find and list APK files
+        run: |
+        echo "=== Searching for APK files ==="
+        find . -name "*.apk" -type f
+        echo "=== Contents of current directory ==="
+        ls -la
+        echo "=== Contents of .buildozer ==="
+        ls -la .buildozer/android/platform/*/build/outputs/apk/ 2>/dev/null || echo "APK directory not found"
         
     - name: Debug - Check build results
       run: |
